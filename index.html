@@ -35,7 +35,11 @@
         const response = await fetch(APP + "api/health", { cache: "no-store", signal: AbortSignal.timeout(WAIT_MS) });
         if (!response.ok) throw new Error(String(response.status));
         location.replace(APP + location.hash);
-      } catch {
+      } catch (error) {
+        // No answer in time is not proof that the server is down: on a device inside Samuel's tailnet the
+        // address is private, and Chrome holds such a request behind its local-network permission (seen
+        // 2026-11-14). Only a definite failure shows the notice; a timeout opens the app anyway.
+        if (error?.name === "TimeoutError") return location.replace(APP + location.hash);
         document.getElementById("title").textContent = "Servizio fermo";
         document.getElementById("text").textContent =
           "Sbobina non risponde in questo momento. Non hai sbagliato nulla: il servizio è temporaneamente fermo, riprova più tardi.";
